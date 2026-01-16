@@ -175,7 +175,7 @@ class AllergenManager: ObservableObject {
     
     private func hasFuzzyMatch(allergen: String, in words: [String]) -> String? {
         let allergenSingular = removePlural(allergen)
-        let threshold = max(2, allergen.count / 3) // Allow ~33% difference
+        let threshold = max(1, allergen.count / 4) // Allow ~25% difference
         
         for word in words {
             let wordSingular = removePlural(word)
@@ -201,7 +201,7 @@ class AllergenManager: ObservableObject {
         if word.hasSuffix("ies") && word.count > 4 {
             return String(word.dropLast(3)) + "y"
         } else if word.hasSuffix("es") && word.count > 3 {
-            return String(word.dropLast(2))
+            return String(word.dropLast(1))
         } else if word.hasSuffix("s") && word.count > 2 {
             return String(word.dropLast())
         }
