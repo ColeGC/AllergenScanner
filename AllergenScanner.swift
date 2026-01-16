@@ -25,11 +25,13 @@ struct Allergen: Identifiable, Codable, Equatable {
     let id: UUID
     var name: String
     var isCustom: Bool
+    var synonyms: [String]
     
-    init(id: UUID = UUID(), name: String, isCustom: Bool = false) {
+    init(id: UUID = UUID(), name: String, isCustom: Bool = false, synonyms: [String] = []) {
         self.id = id
         self.name = name
         self.isCustom = isCustom
+        self.synonyms = synonyms
     }
 }
 
@@ -37,10 +39,22 @@ struct Allergen: Identifiable, Codable, Equatable {
 class AllergenManager: ObservableObject {
     @Published var selectedAllergens: [Allergen] = []
     
-    let commonAllergens = [
-        "milk", "eggs", "peanuts", "tree nuts", "soy",
-        "wheat", "fish", "shellfish", "sesame", "gluten"
+    let commonAllergensWithSynonyms: [String: [String]] = [
+        "milk": ["dairy", "lactose", "casein", "whey", "cream", "butter", "cheese", "yogurt", "curd"],
+        "eggs": ["egg", "albumin", "ovomucoid", "ovalbumin", "lysozyme", "eggwhite", "eggyolk"],
+        "peanuts": ["peanut", "groundnut", "goober", "arachis"],
+        "tree nuts": ["almond", "cashew", "walnut", "pecan", "pistachio", "hazelnut", "macadamia", "pine nut", "chestnut", "beechnut", "butternut"],
+        "soy": ["soya", "soybean", "soybeans", "tofu", "edamame", "miso", "tempeh", "soy lecithin", "textured vegetable protein", "tvp"],
+        "wheat": ["gluten", "flour", "bran", "semolina", "durum", "spelt", "farina", "bulgur", "couscous", "kamut"],
+        "fish": ["salmon", "tuna", "cod", "halibut", "anchovy", "sardine", "bass", "trout", "mackerel", "tilapia"],
+        "shellfish": ["shrimp", "crab", "lobster", "crayfish", "prawn", "clam", "mussel", "oyster", "scallop", "squid", "octopus"],
+        "sesame": ["tahini", "sesame seed", "sesame oil", "benne"],
+        "gluten": ["wheat", "barley", "rye", "triticale", "malt", "brewer's yeast"]
     ]
+    
+    var commonAllergens: [String] {
+        Array(commonAllergensWithSynonyms.keys).sorted()
+    }
     
     init() {
         loadAllergens()
@@ -50,7 +64,8 @@ class AllergenManager: ObservableObject {
         if let index = selectedAllergens.firstIndex(where: { $0.name.lowercased() == name.lowercased() }) {
             selectedAllergens.remove(at: index)
         } else {
-            selectedAllergens.append(Allergen(name: name))
+            let synonyms = commonAllergensWithSynonyms[name.lowercased()] ?? []
+            selectedAllergens.append(Allergen(name: name, synonyms: synonyms))
         }
         saveAllergens()
     }
@@ -60,7 +75,7 @@ class AllergenManager: ObservableObject {
         guard !trimmed.isEmpty else { return }
         guard !selectedAllergens.contains(where: { $0.name.lowercased() == trimmed.lowercased() }) else { return }
         
-        selectedAllergens.append(Allergen(name: trimmed, isCustom: true))
+        selectedAllergens.append(Allergen(name: trimmed, isCustom: true, synonyms: []))
         saveAllergens()
     }
     
@@ -90,14 +105,33 @@ class AllergenManager: ObservableObject {
         
         for allergen in selectedAllergens {
             let normalizedAllergen = normalizeText(allergen.name)
+            let allTermsToCheck = [normalizedAllergen] + allergen.synonyms.map { normalizeText($0) }
             
-            // Check for exact match (including plurals)
-            if hasExactMatch(allergen: normalizedAllergen, in: words) {
-                matches.append(AllergenMatch(allergen: allergen.name, matchType: .exact))
+            var foundExact = false
+            var foundFuzzy = false
+            
+            // Check main allergen name and all synonyms
+            for term in allTermsToCheck {
+                if hasExactMatch(allergen: term, in: words) {
+                    foundExact = true
+                    break
+                }
             }
-            // Check for fuzzy match
-            else if hasFuzzyMatch(allergen: normalizedAllergen, in: words) != nil {
-                matches.append(AllergenMatch(allergen: allergen.name, matchType: .fuzzy))
+            
+            if foundExact {
+                matches.append(AllergenMatch(allergen: allergen.name, matchType: .exact))
+            } else {
+                // Check for fuzzy match on main allergen name and synonyms
+                for term in allTermsToCheck {
+                    if hasFuzzyMatch(allergen: term, in: words) != nil {
+                        foundFuzzy = true
+                        break
+                    }
+                }
+                
+                if foundFuzzy {
+                    matches.append(AllergenMatch(allergen: allergen.name, matchType: .fuzzy))
+                }
             }
         }
         
