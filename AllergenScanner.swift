@@ -1,5 +1,15 @@
+//
+//  AllergenScanner.swift
+//  AllergenScanner
+//
+//  Created by Chapman, Cole G on 1/16/26.
+//
+
+import Foundation // part for default header, delete?
+
 // MARK: - Main App Entry Point
 import SwiftUI
+import Combine
 
 @main
 struct AllergenScannerApp: App {
@@ -28,7 +38,7 @@ class AllergenManager: ObservableObject {
     @Published var selectedAllergens: [Allergen] = []
     
     let commonAllergens = [
-        "milk", "eggs", "peanuts", "tree nuts", "soy", 
+        "milk", "eggs", "peanuts", "tree nuts", "soy",
         "wheat", "fish", "shellfish", "sesame", "gluten"
     ]
     
@@ -86,7 +96,7 @@ class AllergenManager: ObservableObject {
                 matches.append(AllergenMatch(allergen: allergen.name, matchType: .exact))
             }
             // Check for fuzzy match
-            else if let fuzzyMatch = hasFuzzyMatch(allergen: normalizedAllergen, in: words) {
+            else if hasFuzzyMatch(allergen: normalizedAllergen, in: words) != nil {
                 matches.append(AllergenMatch(allergen: allergen.name, matchType: .fuzzy))
             }
         }
@@ -404,16 +414,19 @@ struct ContentView: View {
             if isScanning {
                 CameraView(detectedText: $detectedText, isScanning: $isScanning)
                     .edgesIgnoringSafeArea(.all)
-                    .onChange(of: detectedText) { newText in
-                        detectedAllergens = allergenManager.findAllergens(in: newText)
+                    .onChange(of: detectedText) { oldValue, newValue in
+                        detectedAllergens = allergenManager.findAllergens(in: newValue)
                     }
                 
                 // Focus Frame
-                Rectangle()
-                    .stroke(Color.white, lineWidth: 3)
-                    .frame(width: UIScreen.main.bounds.width * 0.8,
-                           height: UIScreen.main.bounds.height * 0.6)
-                    .opacity(0.5)
+                GeometryReader { geometry in
+                    Rectangle()
+                        .stroke(Color.white, lineWidth: 3)
+                        .frame(width: geometry.size.width * 0.8,
+                               height: geometry.size.height * 0.6)
+                        .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
+                        .opacity(0.5)
+                }
             } else {
                 Color.black.edgesIgnoringSafeArea(.all)
                 
