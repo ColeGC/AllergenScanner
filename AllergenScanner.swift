@@ -43,13 +43,15 @@ class AllergenManager: ObservableObject {
         "milk": ["dairy", "lactose", "casein", "whey", "cream", "butter", "cheese", "yogurt", "curd"],
         "eggs": ["egg", "albumin", "ovomucoid", "ovalbumin", "lysozyme", "eggwhite", "eggyolk"],
         "peanuts": ["peanut", "groundnut", "goober", "arachis"],
-        "tree nuts": ["almond", "cashew", "walnut", "pecan", "pistachio", "hazelnut", "macadamia", "pine nut", "chestnut", "beechnut", "butternut"],
+        "tree nuts": ["almond", "cashew", "walnut", "pecan", "pistachio", "hazelnut", "macadamia", "pine nut", "chestnut", "beechnut", "butternut", "brazil nut"],
         "soy": ["soya", "soybean", "soybeans", "tofu", "edamame", "miso", "tempeh", "soy lecithin", "textured vegetable protein", "tvp"],
         "wheat": ["gluten", "flour", "bran", "semolina", "durum", "spelt", "farina", "bulgur", "couscous", "kamut"],
         "fish": ["salmon", "tuna", "cod", "halibut", "anchovy", "sardine", "bass", "trout", "mackerel", "tilapia"],
         "shellfish": ["shrimp", "crab", "lobster", "crayfish", "prawn", "clam", "mussel", "oyster", "scallop", "squid", "octopus"],
         "sesame": ["tahini", "sesame seed", "sesame oil", "benne"],
-        "gluten": ["wheat", "barley", "rye", "triticale", "malt", "brewer's yeast"]
+        "gluten": ["wheat", "barley", "rye", "triticale", "malt", "brewer's yeast"],
+        "coconut": ["coconut", "cocos nucifera", "sodium cocoate", "coco betaine", "cocamide mipa", "coco glucoside"],
+        "annatto": ["annatto", "achiote", "bixin", "norbixin"]
     ]
     
     var commonAllergens: [String] {
